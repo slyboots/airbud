@@ -8,8 +8,16 @@ requests = "*"
 
 [dev-packages]
 pylint = "*"
-aws-sam-cli = "*"
 "autopep8" = "*"
+aws-sam-cli = "*"
+python-dotenv = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3"
+
+[scripts]
+clean = "find . -path *build/* -delete"
+localapi = "sam local start-api --env-vars .env.json"
+build = "find . -name build_script -exec {} \\;"
+pkg = "sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket lambchops"
+buildold = "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' /usr/local/bin/bash -c 'pipenv run pip install -r requirements.txt -t {} && cp ./{}../*.py {}'"
