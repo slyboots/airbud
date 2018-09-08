@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    airbud
+
+    Simple lambda function for the air table api
+    
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 30
+
+
+Resources:
+    AirBudFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: airbud/build/
+            Handler: app.lambda_handler
+            Runtime: python3.6
+            Environment:
+                Variables:
+                    AIRTABLE_TABLE: list
+                    AIRTABLE_API_URL: https://api.airtable.com/v0/werfqqwrgwq4rg/
+                    AIRTABLE_API_KEY: 12r435yftg34igr
+                    ZENCHETTE_API_URL: https://wefq3rfq3rf.com/qwef/3fq3ref3rf3
+                    AIRTABLE_FILTER: AND(AND(NOT(Status="Lost"),NOT(Status="Saved")), NOT(Site=BLANK()), OR({Site Live}=BLANK(), {Facebook Tool}=BLANK(), {Seller Lead Tool}=BLANK(), {FB Managed}=BLANK(), PPC=BLANK()))
+            Events:
+                AirBud:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /
+                        Method: ANY
+
+
+Outputs:
+    AirBudApi:
+      Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/airbud/"
+    AirBudFunction:
+      Description: "AirBud Lambda Function ARN"
+      Value: !GetAtt AirBudFunction.Arn
+    AirBudFunctionIamRole:
+      Description: "Implicit IAM Role created for AirBud function"
+      Value: !GetAtt AirBudsFunctionRole.Arn
