@@ -81,13 +81,16 @@
         {
             "label": "sam_deploy",
             "type": "shell",
-            "command": "pipenv run sam deploy --template-file packaged.yaml --stack-name sam-app --capabilities CAPABILITY_IAM",
+            "command": "pipenv run sam deploy --template-file packaged.yaml --stack-name lambda-app --capabilities CAPABILITY_IAM",
             "identifier": "sam_deploy",
             "group": "build",
             "problemMatcher": [],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+            "dependsOn": [
+                "sam_package"
+            ]
         },
         {
             "label": "sam_start",
