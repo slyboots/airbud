@@ -35,7 +35,7 @@ Resources:
 
 Outputs:
     AirBudApi:
-      Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+      Description: "API Gateway endpoint URL for Prod stage for airbud function"
       Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/airbud/"
     AirBudFunction:
       Description: "AirBud Lambda Function ARN"
