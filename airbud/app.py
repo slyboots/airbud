@@ -1,6 +1,6 @@
 import os
 import json
-import urllib
+import logging
 import requests
 
 AIRTABLE_BASE_ID = os.getenv('AIRTABLE_BASE_ID')
@@ -77,40 +77,34 @@ def lambda_handler(event, context):
     """Sample pure Lambda function"""
     new_records = []
     try:
-        print(f"Received event: {event}")
-        print("Getting new airtable records!")
         new_records = get_new_airtable_records()
+        logging.info(f"Beginning update of {len(new_records)} records")
         if not new_records:
             return {
                 "statusCode": 200,
                 "body": json.dumps({"message": "No New Records In AirTable!"}),
             }
-        print(f"Found {len(new_records)} records to update!")
         for record in new_records:
-            print(f"{new_records.index(record)}/{len(new_records)} Getting update info for {record['id']} - {record['fields'].get('Site Name')}")
+            logging.info(f"{new_records.index(record)}/{len(new_records)} Getting update info for {record['id']} - {record['fields'].get('Site Name')}")
             try:
                 site_info = get_zenchette_info(record['fields'].get('Site Name'))
                 updates = zenchette_to_airtable(site_info)
-                if os.getenv('DRYRUN'):
-                    print("DRYRUN REQUESTED! ", end=" ")
-                    print(f"record {record['id']} would have been patched with: {json.dumps(updates)}")
-                else:
-                    updated_record = update_airtable(record, updates)
-                    print(f"Updated  in Airtable: {json.dumps(updated_record)}")
+                updated_record = update_airtable(record, updates)
+                logging.info(f"Updated in Airtable: {json.dumps(updated_record)}")
             except ZenchetteError as e:
-                print(e)
+                logging.error(f"Unable to get zenchette info for {record['fields']['Site Name']} ({record['id']})")
                 continue
     except requests.RequestException as e:
         # Send some context about this error to Lambda Logs
-        print(e.response.text)
+        logging.error(f"HTTP Error: {e.response.text}")
         raise e
     return {
         "statusCode": 200,
         "body": json.dumps(
             {
-                "response_for": f"{context.get('aws_request_id')}",
+                "response_for": f"{context.aws_request_id}",
                 "total_records_processed": len(new_records),
-                "updated_records": [r['fields'].get('Site Name') for r in new_records]
+                "updated_records": [r['fields']['Site Name'] for r in new_records]
             }
         ),
     }
