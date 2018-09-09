@@ -57,4 +57,4 @@ Outputs:
       Value: !GetAtt AirBudFunction.Arn
     AirBudFunctionIamRole:
       Description: "Implicit IAM Role created for AirBud function"
-      Value: !GetAtt AirBudsFunctionRole.Arn
+      Value: !GetAtt AirBudFunctionRole.Arn
