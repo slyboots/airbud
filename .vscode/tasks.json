@@ -2,178 +2,65 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": true
+    },
     "tasks": [
         {
-            "label": "deploy",
+            "label": "lambda_deploy",
             "type": "shell",
             "command": "/usr/bin/aws",
-            "identifier": "deploy",
+            "identifier": "lambda_deploy",
             "args": [
                 "lambda",
                 "update-function-code",
                 "--function-name",
                 "${workspaceFolderBasename}",
                 "--zip-file",
-                "fileb://dist/${workspaceFolderBasename}.zip"
+                "fileb://${workspaceFolderBasenmae}/build/${workspaceFolderBasename}.zip"
             ],
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "new"
-            },
             "problemMatcher": []
         },
         {
             "label": "clean",
             "type": "shell",
-            "command": "rm",
+            "command": "find",
             "args": [
-                "-rf",
-                "${workspaceFolder}/dist"
+                ".",
+                "-path",
+                "*build/*",
+                "-delete"
             ],
             "identifier": "clean",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "build:update",
-            "type": "shell",
-            "command": "zip -rf9 ${workspaceFolderBasename}.zip *",
-            "identifier": "update",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
             "group": "build",
-            "options": {
-                "cwd": "${workspaceFolder}/dist"
-            },
             "problemMatcher": [],
-            "dependsOn": [
-                "build_copycode"
-            ]
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
         },
         {
-            "label": "build:full",
+            "label": "zip_lambda",
             "type": "shell",
             "command": "zip -r9 ${workspaceFolderBasename}.zip *",
-            "identifier": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "options": {
-                "cwd": "${workspaceFolder}/dist"
-            },
+            "identifier": "zip_lambda",
+            "group": "build",
             "dependsOn": [
-                "clean",
-                "build_mkdir",
-                "build_getreqs",
-                "build_install",
-                "build_copycode"
+                "build"
             ],
+            "options": {
+                "cwd": "${workspaceFolderBasename}/build"
+            },
             "problemMatcher": []
         },
         {
-            "label": "build_mkdir",
+            "label": "build",
             "type": "shell",
-            "command": "mkdir -p ${workspaceFolder}/dist",
-            "identifier": "build_mkdir",
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "group": "build",
-            "problemMatcher": []
-        },
-        {
-            "label": "build_getreqs",
-            "type": "shell",
-            "command": "pipenv lock -r > requirements.txt",
-            "identifier": "build_getreqs",
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "group": "build",
-            "problemMatcher": [],
-            "options": {
-                "cwd": "${workspaceFolder}/dist"
-            },
-            "dependsOn": [
-                "build_mkdir"
-            ]
-        },
-        {
-            "label": "build_install",
-            "type": "shell",
-            "command": "pip install -r requirements.txt --target=./",
-            "identifier": "build_install",
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "group": "build",
-            "problemMatcher": [],
-            "options": {
-                "cwd": "${workspaceFolder}/dist"
-            },
-            "dependsOn": [
-                "build_mkdir",
-                "build_getreqs"
-            ]
-        },
-        {
-            "label": "build_copycode",
-            "type": "shell",
-            "command": "cp -fv ../${workspaceFolderBasename}.py ./",
-            "identifier": "build_copycode",
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "group": "build",
-            "problemMatcher": [],
-            "options": {
-                "cwd": "${workspaceFolder}/dist"
-            },
-            "dependsOn": [
-                "build_mkdir"
-            ]
-        },
-        {
-            "label": "sam_clean",
-            "type": "shell",
-            "command": "find . -path *build/* -delete",
-            "identifier": "sam_clean",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
+            "command": "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' bash -c 'pipenv run pip install -r requirements.txt -t {} && cp ./{}../*.py {}'",
+            "identifier": "build",
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -185,12 +72,6 @@
             "type": "shell",
             "command": "pipenv run sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket lambchops",
             "identifier": "sam_package",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -198,33 +79,22 @@
             },
         },
         {
-            "label": "sam_build",
+            "label": "sam_deploy",
             "type": "shell",
-            "command": "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' /usr/local/bin/bash -c 'pipenv run pip install -r requirements.txt -t {} && cp ./{}../*.py {}'",
-            "identifier": "sam_build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
+            "command": "pipenv run sam deploy --template-file packaged.yaml --stack-name sam-app --capabilities CAPABILITY_IAM",
+            "identifier": "sam_deploy",
             "group": "build",
             "problemMatcher": [],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
         },
+        
         {
             "label": "sam_start",
             "type": "shell",
             "command": "pipenv run sam local start-api -n ${workspaceFolder}/.env.json",
             "identifier": "sam_start",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
             "group": "build",
             "problemMatcher": [],
             "options": {
