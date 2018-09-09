@@ -19,9 +19,10 @@ Parameters:
         Type: String
     AirtableFilter:
         Type: String
+    AirtableBaseId:
+        Type: String
     ZenchetteApiUrl:
         Type: String
-
 Resources:
     AirBudFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -29,9 +30,12 @@ Resources:
             CodeUri: airbud/build/
             Handler: app.lambda_handler
             Runtime: python3.6
+            Description: A script that finds and updates records in airtable with uturn information
+            FunctionName: airbud
             Environment:
                 Variables:
                     AIRTABLE_TABLE: !Ref AirtableTable
+                    AIRTABLE_BASE_ID: !Ref AirtableBaseId
                     AIRTABLE_API_URL: !Ref AirtableApiUrl
                     AIRTABLE_API_KEY: !Ref AirtableApiKey
                     AIRTABLE_FILTER: !Ref AirtableFilter
@@ -45,7 +49,7 @@ Resources:
                 AutoUpdateScheduledEvent:
                     Type: Schedule
                     Properties:
-                        Schedule: cron(*/15 8-18 * * 1-5 *)
+                        Schedule: cron(0/15 8-18 ? * MON-FRI *)
 
 
 Outputs:
