@@ -59,7 +59,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' bash -c 'pipenv run pip install -r requirements.txt -t {} -U && cp ./{}../*.py {}'",
+            "command": "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' bash -c 'pipenv run pip install -r requirements.txt -t {} --upgrade && cp ./{}../*.py {}'",
             "identifier": "build",
             "group": "build",
             "problemMatcher": [],
