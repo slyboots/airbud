@@ -150,10 +150,10 @@ def lambda_handler(event, context):
             }
         for record in new_records:
             try:
-                print(f"Updating record {record['id']}: {record['fields'].get('Site')}")
+                print(f"Getting info for record {record['id']}: {record['fields'].get('Site')}")
                 site_info = get_zenchette_info(record['fields'].get('Site'))
                 updates = zenchette_to_airtable(site_info)
-                print(f"\t\tupdates: {json.dumps(updates)}")
+                print(f"Updates made to record {record['id']}: {json.dumps(updates)}")
                 update_airtable(record, updates)
             except ZenchetteError:
                 continue
@@ -161,11 +161,13 @@ def lambda_handler(event, context):
         # Send some context about this error to Lambda Logs
         print(e)
         raise e
-
-
     return {
         "statusCode": 200,
         "body": json.dumps(
-            {"message": "hello world", "records": json.dumps(new_records)}
+            {
+                "response_for": f"{context.aws_request_id}",
+                "total_records_processed": len(new_records),
+                "record_list": [r['id'] for r in new_records]
+            }
         ),
     }
