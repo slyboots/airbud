@@ -3,8 +3,10 @@ import json
 import urllib
 import requests
 
+AIRTABLE_BASE_ID = os.getenv('AIRTABLE_BASE_ID')
 AIRTABLE_TABLE = os.getenv('AIRTABLE_TABLE')
 AIRTABLE_API_URL = os.getenv('AIRTABLE_API_URL')
+AIRTABLE_REQUEST_ENDPOINT = f"{AIRTABLE_API_URL}{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE}"
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
 AIRTABLE_API_HEADERS = {"Content-Type": "application/json", "Authorization": f"Bearer {AIRTABLE_API_KEY}"}
 AIRTABLE_FIELDS = ["Site", "Status", "Start Date", "Client Name", "Site Live", "Facebook Tool", "Seller Lead Tool", "FB Managed", "PPC"]
@@ -27,13 +29,12 @@ def get_new_airtable_records():
         return res.json()
 
     results = []
-    req_url = urllib.parse.urljoin(AIRTABLE_API_URL, AIRTABLE_TABLE)
     params = {'fields[]': AIRTABLE_FIELDS, 'filterByFormula': AIRTABLE_FILTER}
     ses = requests.Session()
-    response = record_request(ses, req_url, params)
+    response = record_request(ses, AIRTABLE_REQUEST_ENDPOINT, params)
     results.extend(response.get('records'))
     while response.get('offset') is not None:
-        response = record_request(ses, req_url, params, offset=response.get('offset'))
+        response = record_request(ses, AIRTABLE_REQUEST_ENDPOINT, params, offset=response.get('offset'))
         results.extend(response.get('records'))
     return results
 
@@ -64,7 +65,7 @@ def zenchette_to_airtable(site_info):
 
 
 def update_airtable(record, updates):
-    url = urllib.parse.urljoin(AIRTABLE_API_URL, AIRTABLE_TABLE+f"/{record.get('id')}")
+    url = urllib.parse.urljoin(AIRTABLE_REQUEST_ENDPOINT, f"/{record.get('id')}")
     data = {'fields': updates}
     r = requests.patch(url, headers=AIRTABLE_API_HEADERS, data=json.dumps(data))
     if r.status_code != requests.codes.get('ok'):
