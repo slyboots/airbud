@@ -25,6 +25,9 @@ Parameters:
         Type: String
     ZenchetteApiUrl:
         Type: String
+    ZenchetteFields:
+        Type: String
+
 
 Resources:
     AirBudFunction:
@@ -44,6 +47,7 @@ Resources:
                     AIRTABLE_FILTER: !Ref AirtableFilter
                     AIRTABLE_FIELDS: !Ref AirtableFields
                     ZENCHETTE_API_URL: !Ref ZenchetteApiUrl
+                    ZENCHETTE_FIELDS: !Ref ZenchetteFields
             Events:
                 UpdateRequestApiEvent:
                     Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
