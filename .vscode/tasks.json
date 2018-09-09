@@ -89,7 +89,6 @@
                 "cwd": "${workspaceFolder}"
             },
         },
-        
         {
             "label": "sam_start",
             "type": "shell",
