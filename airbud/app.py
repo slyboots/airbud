@@ -9,7 +9,7 @@ AIRTABLE_API_URL = os.getenv('AIRTABLE_API_URL')
 AIRTABLE_REQUEST_ENDPOINT = f"{AIRTABLE_API_URL}{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE}"
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
 AIRTABLE_API_HEADERS = {"Content-Type": "application/json", "Authorization": f"Bearer {AIRTABLE_API_KEY}"}
-AIRTABLE_FIELDS = ["Site", "Status", "Start Date", "Client Name", "Site Live", "Facebook Tool", "Seller Lead Tool", "FB Managed", "PPC"]
+AIRTABLE_FIELDS = os.getenv('AIRTABLE_FIELDS').split(',')
 AIRTABLE_FILTER = os.getenv('AIRTABLE_FILTER')
 ZENCHETTE_API_URL = os.getenv('ZENCHETTE_API_URL')
 
@@ -65,7 +65,7 @@ def zenchette_to_airtable(site_info):
 
 
 def update_airtable(record, updates):
-    url = urllib.parse.urljoin(AIRTABLE_REQUEST_ENDPOINT, f"/{record.get('id')}")
+    url = AIRTABLE_REQUEST_ENDPOINT + f"/{record.get('id')}"
     data = {'fields': updates}
     r = requests.patch(url, headers=AIRTABLE_API_HEADERS, data=json.dumps(data))
     if r.status_code != requests.codes.get('ok'):
@@ -74,101 +74,43 @@ def update_airtable(record, updates):
 
 
 def lambda_handler(event, context):
-    """Sample pure Lambda function
-
-    Parameters
-    ----------
-    event: dict, required
-        API Gateway Lambda Proxy Input Format
-
-        {
-            "resource": "Resource path",
-            "path": "Path parameter",
-            "httpMethod": "Incoming request's method name"
-            "headers": {Incoming request headers}
-            "queryStringParameters": {query string parameters }
-            "pathParameters":  {path parameters}
-            "stageVariables": {Applicable stage variables}
-            "requestContext": {Request context, including authorizer-returned key-value pairs}
-            "body": "A JSON string of the request payload."
-            "isBase64Encoded": "A boolean flag to indicate if the applicable request payload is Base64-encode"
-        }
-
-        https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
-
-    context: object, required
-        Lambda Context runtime methods and attributes
-
-    Attributes
-    ----------
-
-    context.aws_request_id: str
-         Lambda request ID
-    context.client_context: object
-         Additional context when invoked through AWS Mobile SDK
-    context.function_name: str
-         Lambda function name
-    context.function_version: str
-         Function version identifier
-    context.get_remaining_time_in_millis: function
-         Time in milliseconds before function times out
-    context.identity:
-         Cognito identity provider context when invoked through AWS Mobile SDK
-    context.invoked_function_arn: str
-         Function ARN
-    context.log_group_name: str
-         Cloudwatch Log group name
-    context.log_stream_name: str
-         Cloudwatch Log stream name
-    context.memory_limit_in_mb: int
-        Function memory
-
-        https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
-
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
-        'statusCode' and 'body' are required
-
-        {
-            "isBase64Encoded": true | false,
-            "statusCode": httpStatusCode,
-            "headers": {"headerName": "headerValue", ...},
-            "body": "..."
-        }
-
-        # api-gateway-simple-proxy-for-lambda-output-format
-        https: // docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
+    """Sample pure Lambda function"""
+    new_records = []
     try:
+        print(f"Received event: {event}")
+        print("Getting new airtable records!")
         new_records = get_new_airtable_records()
         if not new_records:
             return {
                 "statusCode": 200,
-                "body": json.dumps(
-                    {"message": "No New Records In AirTable!", "records": []}
-                ),
+                "body": json.dumps({"message": "No New Records In AirTable!"}),
             }
+        print(f"Found {len(new_records)} records to update!")
         for record in new_records:
+            print(f"{new_records.index(record)}/{len(new_records)} Getting update info for {record['id']} - {record['fields'].get('Site Name')}")
             try:
-                print(f"Getting info for record {record['id']}: {record['fields'].get('Site')}")
-                site_info = get_zenchette_info(record['fields'].get('Site'))
+                site_info = get_zenchette_info(record['fields'].get('Site Name'))
                 updates = zenchette_to_airtable(site_info)
-                print(f"Updates made to record {record['id']}: {json.dumps(updates)}")
-                update_airtable(record, updates)
-            except ZenchetteError:
+                if os.getenv('DRYRUN'):
+                    print("DRYRUN REQUESTED! ", end=" ")
+                    print(f"record {record['id']} would have been patched with: {json.dumps(updates)}")
+                else:
+                    updated_record = update_airtable(record, updates)
+                    print(f"Updated  in Airtable: {json.dumps(updated_record)}")
+            except ZenchetteError as e:
+                print(e)
                 continue
     except requests.RequestException as e:
         # Send some context about this error to Lambda Logs
-        print(e)
+        print(e.response.text)
         raise e
     return {
         "statusCode": 200,
         "body": json.dumps(
             {
-                "response_for": f"{context.aws_request_id}",
+                "response_for": f"{context.get('aws_request_id')}",
                 "total_records_processed": len(new_records),
-                "record_list": [r['id'] for r in new_records]
+                "updated_records": [r['fields'].get('Site Name') for r in new_records]
             }
         ),
     }
