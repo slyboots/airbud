@@ -8,7 +8,7 @@ Description: >
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
     Function:
-        Timeout: 30
+        Timeout: 180
 
 Parameters:
     AirtableApiUrl:
@@ -19,10 +19,13 @@ Parameters:
         Type: String
     AirtableFilter:
         Type: String
+    AirtableFields:
+        Type: String
     AirtableBaseId:
         Type: String
     ZenchetteApiUrl:
         Type: String
+
 Resources:
     AirBudFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -39,6 +42,7 @@ Resources:
                     AIRTABLE_API_URL: !Ref AirtableApiUrl
                     AIRTABLE_API_KEY: !Ref AirtableApiKey
                     AIRTABLE_FILTER: !Ref AirtableFilter
+                    AIRTABLE_FIELDS: !Ref AirtableFields
                     ZENCHETTE_API_URL: !Ref ZenchetteApiUrl
             Events:
                 UpdateRequestApiEvent:
