@@ -1,2 +1,0 @@
-#! /usr/local/bin/bash
-grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' /usr/local/bin/bash -c 'pipenv run pip install -r requirements.txt -t {} && cp ./{}../*.py {}'
