@@ -112,7 +112,7 @@ def lambda_handler(event, context):
         "statusCode": 200,
         "body": json.dumps(
             {
-                "response_for": f"{context.aws_request_id}",
+                "response_for": f"{attr(context,'aws_request_id')",
                 "total_records_processed": len(new_records),
                 "total_updated": len(updated_records),
                 "updated_records": updated_records,
@@ -121,3 +121,6 @@ def lambda_handler(event, context):
             }
         ),
     }
+
+if __name__ == "__main__":
+    lambda_handler({'test':'test'},{'context': 'context'})
