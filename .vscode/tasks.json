@@ -14,7 +14,6 @@
             "label": "lambda_deploy",
             "type": "shell",
             "command": "/usr/bin/aws",
-            "identifier": "lambda_deploy",
             "args": [
                 "lambda",
                 "update-function-code",
@@ -35,7 +34,6 @@
                 "*build/*",
                 "-delete"
             ],
-            "identifier": "clean",
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -46,7 +44,6 @@
             "label": "zip_lambda",
             "type": "shell",
             "command": "zip -r9 ${workspaceFolderBasename}.zip *",
-            "identifier": "zip_lambda",
             "group": "build",
             "dependsOn": [
                 "build"
@@ -60,7 +57,6 @@
             "label": "build",
             "type": "shell",
             "command": "grep -i -P '(?<=CodeUri: ).+' -o ./template.yaml | xargs  -I '{}' bash -c 'pipenv run pip install -r requirements.txt -t {} --upgrade && cp ./{}../*.py {}'",
-            "identifier": "build",
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -71,7 +67,6 @@
             "label": "sam_package",
             "type": "shell",
             "command": "pipenv run sam package --template-file template.yaml --output-template-file packaged.yaml --s3-bucket lambchops",
-            "identifier": "sam_package",
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -82,7 +77,6 @@
             "label": "sam_deploy",
             "type": "shell",
             "command": "pipenv run sam deploy --template-file packaged.yaml --stack-name lambda-app --capabilities CAPABILITY_IAM",
-            "identifier": "sam_deploy",
             "group": "build",
             "problemMatcher": [],
             "options": {
@@ -96,7 +90,6 @@
             "label": "sam_start",
             "type": "shell",
             "command": "pipenv run sam local start-api -n ${workspaceFolder}/.env.json",
-            "identifier": "sam_start",
             "group": "build",
             "problemMatcher": [],
             "options": {
